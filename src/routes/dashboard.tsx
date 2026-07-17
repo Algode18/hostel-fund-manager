@@ -43,12 +43,12 @@ function DashboardPage() {
             You're not part of a group yet. Start a new jar whenever you're ready — it's totally up
             to you.
           </p>
-          <Link
-            to="/onboarding"
+          <a
+            href="/onboarding"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-medium text-brand-foreground shadow-sm transition-transform hover:bg-brand/90 active:scale-[0.98]"
           >
             <Plus className="size-4" /> Start a new jar
-          </Link>
+          </a>
         </div>
       </AppShell>
     );
