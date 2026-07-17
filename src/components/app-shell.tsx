@@ -11,7 +11,7 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useCurrentGroup, useCurrentMember, useStore } from "@/lib/store";
@@ -36,6 +36,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [groupOpen, setGroupOpen] = useState(false);
+  const groupMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!groupOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (groupMenuRef.current && !groupMenuRef.current.contains(e.target as Node)) {
+        setGroupOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [groupOpen]);
 
   const needsAuth = !authLoading && !user;
   // A brand-new user with no jar yet is a normal, valid state — never force
@@ -96,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <div className="size-4 rounded-full border-2 border-current" />
             </Link>
-            <div className="relative">
+            <div className="relative" ref={groupMenuRef}>
               <button
                 onClick={() => setGroupOpen((v) => !v)}
                 className="flex items-center gap-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

@@ -99,8 +99,8 @@ function NewDepositPage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="1000"
-                min="1"
-                step="1"
+                min="0.01"
+                step="0.01"
                 className="w-full rounded-xl bg-surface px-4 py-3 text-lg font-semibold ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-brand"
                 autoFocus
               />

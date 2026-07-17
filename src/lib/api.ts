@@ -26,6 +26,13 @@ export interface Deposit {
   createdAt: string;
 }
 
+export type SplitType = "equal" | "manual";
+
+export interface ExpenseShare {
+  memberId: string;
+  amount: number;
+}
+
 export interface Expense {
   id: string;
   groupId: string;
@@ -34,6 +41,9 @@ export interface Expense {
   paidBy: string;
   createdBy: string;
   createdAt: string;
+  splitType: SplitType;
+  shares: ExpenseShare[];
+  /** derived from shares — kept so existing code that only needs "who was in on it" still works */
   participantIds: string[];
 }
 
@@ -65,7 +75,8 @@ interface ExpenseRow {
   paid_by: string;
   created_by: string;
   created_at: string;
-  expense_participants?: { member_id: string }[] | null;
+  split_type: SplitType;
+  expense_participants?: { member_id: string; share_amount: number }[] | null;
 }
 
 function mapMember(row: MemberRow): Member {
@@ -90,6 +101,10 @@ function mapDeposit(row: DepositRow): Deposit {
 }
 
 function mapExpense(row: ExpenseRow): Expense {
+  const shares = (row.expense_participants ?? []).map((p) => ({
+    memberId: p.member_id,
+    amount: Number(p.share_amount),
+  }));
   return {
     id: row.id,
     groupId: row.group_id,
@@ -98,7 +113,9 @@ function mapExpense(row: ExpenseRow): Expense {
     paidBy: row.paid_by,
     createdBy: row.created_by,
     createdAt: row.created_at,
-    participantIds: (row.expense_participants ?? []).map((p) => p.member_id),
+    splitType: row.split_type,
+    shares,
+    participantIds: shares.map((s) => s.memberId),
   };
 }
 
@@ -173,6 +190,16 @@ export async function removeMember(groupId: string, memberId: string): Promise<v
   if (error) throw error;
 }
 
+export async function clearJarBalance(groupId: string): Promise<void> {
+  const { error } = await supabase.rpc("clear_jar_balance", { p_group_id: groupId });
+  if (error) throw error;
+}
+
+export async function deleteGroup(groupId: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_group", { p_group_id: groupId });
+  if (error) throw error;
+}
+
 // ---------------------------------------------------------------------------
 // Deposits
 // ---------------------------------------------------------------------------
@@ -205,7 +232,7 @@ export async function fetchExpenses(groupId: string): Promise<Expense[]> {
   const { data, error } = await supabase
     .from("expenses")
     .select(
-      "id, group_id, title, amount, paid_by, created_by, created_at, expense_participants(member_id)",
+      "id, group_id, title, amount, paid_by, created_by, created_at, split_type, expense_participants(member_id, share_amount)",
     )
     .eq("group_id", groupId)
     .order("created_at", { ascending: false });
@@ -213,19 +240,36 @@ export async function fetchExpenses(groupId: string): Promise<Expense[]> {
   return (data ?? []).map(mapExpense);
 }
 
+/**
+ * Splits `amount` evenly across `participantIds`, rounded to the paisa.
+ * Division rarely comes out even (e.g. ₹100 / 3 = 33.333...), so any
+ * leftover paisa is assigned to the first participant — this keeps the
+ * shares summing to exactly `amount`, which create_expense() requires.
+ */
+export function computeEqualShares(amount: number, participantIds: string[]): ExpenseShare[] {
+  if (participantIds.length === 0) return [];
+  const base = Math.floor((amount / participantIds.length) * 100) / 100;
+  const shares = participantIds.map((memberId) => ({ memberId, amount: base }));
+  const remainder = Math.round((amount - base * participantIds.length) * 100) / 100;
+  shares[0].amount = Math.round((shares[0].amount + remainder) * 100) / 100;
+  return shares;
+}
+
 export async function addExpense(input: {
   groupId: string;
   title: string;
   amount: number;
   paidBy: string;
-  participantIds: string[];
+  splitType: SplitType;
+  shares: ExpenseShare[];
 }): Promise<void> {
   const { error } = await supabase.rpc("create_expense", {
     p_group_id: input.groupId,
     p_title: input.title,
     p_amount: input.amount,
     p_paid_by: input.paidBy,
-    p_participant_ids: input.participantIds,
+    p_shares: input.shares.map((s) => ({ member_id: s.memberId, amount: s.amount })),
+    p_split_type: input.splitType,
   });
   if (error) throw error;
 }
@@ -270,9 +314,8 @@ export function computeBalances(group: Group, deposits: Deposit[], expenses: Exp
   }
   for (const e of expenses) {
     if (e.groupId !== group.id) continue;
-    const share = e.amount / (e.participantIds.length || 1);
-    for (const pid of e.participantIds) {
-      if (balances[pid]) balances[pid].spent += share;
+    for (const s of e.shares) {
+      if (balances[s.memberId]) balances[s.memberId].spent += s.amount;
     }
   }
   for (const id of Object.keys(balances)) {
@@ -282,7 +325,18 @@ export function computeBalances(group: Group, deposits: Deposit[], expenses: Exp
 }
 
 export function formatINR(n: number) {
-  return "₹" + Math.round(n).toLocaleString("en-IN");
+  // Round to the nearest paisa first so floating-point noise (e.g. splitting
+  // ₹100 three ways -> 33.333333333336) never leaks into the display, but
+  // keep the real fraction instead of collapsing everything to whole rupees.
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  const isWhole = Math.abs(rounded - Math.round(rounded)) < 0.001;
+  return (
+    "₹" +
+    rounded.toLocaleString("en-IN", {
+      minimumFractionDigits: isWhole ? 0 : 2,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 export function formatDate(iso: string) {

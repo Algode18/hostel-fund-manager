@@ -168,6 +168,7 @@ function DashboardPage() {
                     <p className="font-medium">{formatINR(e.amount)}</p>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       Split by {e.participantIds.length}
+                      {e.splitType === "manual" ? " · manual" : ""}
                     </p>
                   </div>
                 </div>

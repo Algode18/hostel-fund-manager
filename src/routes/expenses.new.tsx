@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { formatINR, useCurrentGroup, useCurrentMember, useStore } from "@/lib/store";
-import { apiErrorMessage } from "@/lib/api";
+import { apiErrorMessage, computeEqualShares, type SplitType } from "@/lib/api";
 
 export const Route = createFileRoute("/expenses/new")({
   head: () => ({
@@ -27,11 +27,26 @@ function NewExpensePage() {
   const [participants, setParticipants] = useState<Set<string>>(
     new Set(group.members.map((m) => m.id)),
   );
+  const [splitType, setSplitType] = useState<SplitType>("equal");
+  // Manual per-person amounts, keyed by member id, kept as raw text so the
+  // person can clear a field or type "3.5" without fighting the input.
+  const [manualAmounts, setManualAmounts] = useState<Record<string, string>>({});
 
-  const share = useMemo(() => {
-    const amt = parseFloat(amount) || 0;
-    return participants.size > 0 ? amt / participants.size : 0;
-  }, [amount, participants]);
+  const amt = parseFloat(amount) || 0;
+  const participantIds = useMemo(() => Array.from(participants), [participants]);
+
+  const equalShares = useMemo(
+    () => computeEqualShares(amt, participantIds),
+    [amt, participantIds],
+  );
+
+  const manualTotal = useMemo(
+    () =>
+      participantIds.reduce((sum, id) => sum + (parseFloat(manualAmounts[id] ?? "") || 0), 0),
+    [manualAmounts, participantIds],
+  );
+  const manualRemaining = Math.round((amt - manualTotal) * 100) / 100;
+  const manualBalances = Math.abs(manualRemaining) < 0.01;
 
   const toggle = (id: string) => {
     setParticipants((prev) => {
@@ -43,19 +58,33 @@ function NewExpensePage() {
   };
 
   const [submitting, setSubmitting] = useState(false);
-  const canSubmit = title.trim() && parseFloat(amount) > 0 && participants.size > 0 && !submitting;
+  const canSubmit =
+    !!title.trim() &&
+    amt > 0 &&
+    participantIds.length > 0 &&
+    !submitting &&
+    (splitType === "equal" || manualBalances);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     setSubmitting(true);
     try {
+      const shares =
+        splitType === "equal"
+          ? equalShares
+          : participantIds.map((memberId) => ({
+              memberId,
+              amount: Math.round((parseFloat(manualAmounts[memberId] ?? "") || 0) * 100) / 100,
+            }));
+
       await store.addExpense({
         groupId: group.id,
         title: title.trim(),
-        amount: parseFloat(amount),
+        amount: amt,
         paidBy,
-        participantIds: Array.from(participants),
+        splitType,
+        shares,
       });
       navigate({ to: "/expenses" });
     } catch (err) {
@@ -70,7 +99,7 @@ function NewExpensePage() {
       <div className="mx-auto max-w-2xl">
         <h1 className="font-display text-4xl">New receipt</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Log a shared expense. It splits equally between whoever you check.
+          Log a shared expense — split it equally, or type each person's exact share.
         </p>
 
         <form
@@ -93,9 +122,9 @@ function NewExpensePage() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0"
+                placeholder="0.00"
                 min="0"
-                step="1"
+                step="0.01"
                 className="input"
               />
             </Field>
@@ -137,10 +166,88 @@ function NewExpensePage() {
             </div>
           </Field>
 
-          <div className="flex items-center justify-between rounded-xl bg-brand/5 p-4">
-            <span className="text-sm text-muted-foreground">Per person share</span>
-            <span className="text-xl font-semibold text-brand">{formatINR(share)}</span>
-          </div>
+          <Field label="Split type">
+            <div className="inline-flex rounded-xl bg-surface p-1 ring-1 ring-black/5">
+              <button
+                type="button"
+                onClick={() => setSplitType("equal")}
+                className={
+                  "rounded-lg px-4 py-2 text-sm font-medium transition-colors " +
+                  (splitType === "equal"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground")
+                }
+              >
+                Split equally
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitType("manual")}
+                className={
+                  "rounded-lg px-4 py-2 text-sm font-medium transition-colors " +
+                  (splitType === "manual"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground")
+                }
+              >
+                Split manually
+              </button>
+            </div>
+          </Field>
+
+          {splitType === "equal" ? (
+            <div className="flex items-center justify-between rounded-xl bg-brand/5 p-4">
+              <span className="text-sm text-muted-foreground">Per person share</span>
+              <span className="text-xl font-semibold text-brand">
+                {formatINR(equalShares[0]?.amount ?? 0)}
+              </span>
+            </div>
+          ) : (
+            <Field label="Each person's exact share (₹)">
+              <div className="space-y-2">
+                {participantIds.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Check at least one person above first.
+                  </p>
+                )}
+                {participantIds.map((id) => {
+                  const m = group.members.find((x) => x.id === id);
+                  return (
+                    <div key={id} className="flex items-center gap-3">
+                      <span className="w-24 shrink-0 text-sm font-medium">
+                        {m?.name.split(" ")[0]}
+                      </span>
+                      <input
+                        type="number"
+                        value={manualAmounts[id] ?? ""}
+                        onChange={(e) =>
+                          setManualAmounts((prev) => ({ ...prev, [id]: e.target.value }))
+                        }
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        className="input"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              {participantIds.length > 0 && (
+                <p
+                  className={
+                    "mt-3 text-sm font-medium " +
+                    (manualBalances ? "text-muted-foreground" : "text-brand")
+                  }
+                >
+                  {manualBalances
+                    ? `Shares add up to ${formatINR(manualTotal)}.`
+                    : manualRemaining > 0
+                      ? `${formatINR(manualRemaining)} left to assign.`
+                      : `${formatINR(Math.abs(manualRemaining))} too much — reduce a share.`}
+                </p>
+              )}
+            </Field>
+          )}
 
           <div className="flex justify-end gap-3">
             <button

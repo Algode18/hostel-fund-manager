@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { UserPlus, Trash2 } from "lucide-react";
+import { UserPlus, Trash2, RotateCcw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import {
@@ -26,14 +26,54 @@ function MembersPage() {
   const group = useCurrentGroup();
   const me = useCurrentMember();
   const store = useStore();
+  const navigate = useNavigate();
   const balances = computeBalances(group, store.deposits, store.expenses);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const canManage = me.role === "admin";
+
+  const clearBalance = async () => {
+    if (
+      !confirm(
+        `Clear all deposits and expenses in "${group.name}"? Members stay in the group, but every money record is wiped. This can't be undone.`,
+      )
+    )
+      return;
+    setClearing(true);
+    try {
+      await store.clearJarBalance(group.id);
+      toast.success("Jar balance cleared");
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const removeGroup = async () => {
+    const typed = prompt(
+      `This permanently deletes "${group.name}" and every deposit, expense, and member record in it. This can't be undone.\n\nType the group name to confirm:`,
+    );
+    if (typed !== group.name) {
+      if (typed !== null) toast.error("Name didn't match — group was not deleted.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      await store.deleteGroup(group.id);
+      toast.success("Group deleted");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+      setDeleting(false);
+    }
+  };
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +219,47 @@ function MembersPage() {
           </tbody>
         </table>
       </div>
+
+      {canManage && (
+        <div className="mt-10 rounded-2xl border border-brand/20 bg-brand/5 p-5">
+          <div className="mb-4 flex items-center gap-2 text-brand">
+            <AlertTriangle className="size-4" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider">Danger Zone</h2>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Clear jar balance</p>
+              <p className="text-xs text-muted-foreground">
+                Deletes all deposits and expenses. Members stay in the group.
+              </p>
+            </div>
+            <button
+              onClick={clearBalance}
+              disabled={clearing}
+              className="inline-flex items-center gap-2 rounded-lg bg-background px-4 py-2 text-sm font-medium ring-1 ring-black/10 hover:bg-surface disabled:opacity-50"
+            >
+              <RotateCcw className="size-4" /> {clearing ? "Clearing…" : "Clear balance"}
+            </button>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-4 border-t border-brand/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">Delete group</p>
+              <p className="text-xs text-muted-foreground">
+                Permanently deletes the group, its members, and all money history.
+              </p>
+            </div>
+            <button
+              onClick={removeGroup}
+              disabled={deleting}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+            >
+              <Trash2 className="size-4" /> {deleting ? "Deleting…" : "Delete group"}
+            </button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

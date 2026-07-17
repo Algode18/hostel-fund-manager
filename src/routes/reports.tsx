@@ -40,16 +40,17 @@ function ReportsPage() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([day, amount]) => ({
         day: new Date(day).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
-        amount: Math.round(amount),
+        amount: Math.round(amount * 100) / 100,
       }));
   }, [groupExpenses]);
 
   const perMember = useMemo(() => {
     return group.members.map((m) => {
-      const total = groupExpenses
-        .filter((e) => e.participantIds.includes(m.id))
-        .reduce((s, e) => s + e.amount / e.participantIds.length, 0);
-      return { name: m.name.split(" ")[0], total: Math.round(total), hue: m.avatarHue };
+      const total = groupExpenses.reduce((s, e) => {
+        const share = e.shares.find((sh) => sh.memberId === m.id);
+        return s + (share?.amount ?? 0);
+      }, 0);
+      return { name: m.name.split(" ")[0], total: Math.round(total * 100) / 100, hue: m.avatarHue };
     });
   }, [group.members, groupExpenses]);
 

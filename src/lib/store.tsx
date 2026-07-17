@@ -21,6 +21,8 @@ interface Store {
   addGroup: (name: string, members: { name: string; email: string }[]) => Promise<string>;
   addMember: (groupId: string, name: string, email: string) => Promise<void>;
   removeMember: (groupId: string, memberId: string) => Promise<void>;
+  clearJarBalance: (groupId: string) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   addDeposit: (groupId: string, memberId: string, amount: number) => Promise<void>;
   addExpense: (input: Parameters<typeof api.addExpense>[0]) => Promise<void>;
   updateExpense: (id: string, patch: Parameters<typeof api.updateExpense>[1]) => Promise<void>;
@@ -112,6 +114,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     removeMember: async (groupId, memberId) => {
       await api.removeMember(groupId, memberId);
+      await invalidateGroups();
+    },
+
+    clearJarBalance: async (groupId) => {
+      await api.clearJarBalance(groupId);
+      invalidateGroup();
+    },
+
+    deleteGroup: async (groupId) => {
+      await api.deleteGroup(groupId);
+      // The current group is gone — drop it locally so the "fall back to
+      // first group" effect above picks a new one (or the empty state)
+      // instead of continuing to query a group id that no longer exists.
+      if (groupId === currentGroupId) {
+        setCurrentGroupIdState("");
+        localStorage.removeItem(CURRENT_GROUP_KEY);
+      }
       await invalidateGroups();
     },
 

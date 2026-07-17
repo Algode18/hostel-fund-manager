@@ -130,6 +130,11 @@ function ExpensesPage() {
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(e.createdAt)}</td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {e.participantIds.length} people
+                    {e.splitType === "manual" && (
+                      <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-brand">
+                        manual
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium">{formatINR(e.amount)}</td>
                   {me.role === "admin" && (
