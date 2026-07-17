@@ -1,0 +1,164 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Hostel Fund Manager — Warm Tactile Ledger design system.
+ * Palette: paper, surface, brand terracotta, ink stone.
+ * Fonts: Young Serif (display) + Schibsted Grotesk (sans).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-positive: var(--positive);
+  --font-display: "Young Serif", ui-serif, Georgia, serif;
+  --font-sans: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+  /* Warm paper + terracotta palette */
+  --paper: oklch(0.987 0.005 60);
+  --surface: oklch(0.955 0.012 65);
+  --brand: oklch(0.575 0.148 40);
+  --brand-foreground: oklch(0.985 0.005 60);
+  --brand-soft: oklch(0.92 0.035 45);
+  --positive: oklch(0.58 0.11 155);
+
+  --background: var(--paper);
+  --foreground: oklch(0.22 0.02 55);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 55);
+  --popover: var(--paper);
+  --popover-foreground: oklch(0.22 0.02 55);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface);
+  --secondary-foreground: oklch(0.28 0.02 55);
+  --muted: var(--surface);
+  --muted-foreground: oklch(0.5 0.015 55);
+  --accent: var(--brand-soft);
+  --accent-foreground: oklch(0.3 0.05 40);
+  --destructive: oklch(0.577 0.22 27);
+  --destructive-foreground: oklch(0.985 0.005 60);
+  --border: oklch(0.9 0.01 60);
+  --input: oklch(0.93 0.01 60);
+  --ring: var(--brand);
+  --chart-1: oklch(0.575 0.148 40);
+  --chart-2: oklch(0.65 0.1 155);
+  --chart-3: oklch(0.7 0.12 85);
+  --chart-4: oklch(0.55 0.1 250);
+  --chart-5: oklch(0.6 0.15 320);
+  --sidebar: var(--paper);
+  --sidebar-foreground: oklch(0.22 0.02 55);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: oklch(0.28 0.02 55);
+  --sidebar-border: oklch(0.9 0.01 60);
+  --sidebar-ring: var(--brand);
+}
+
+.dark {
+  --paper: oklch(0.2 0.015 55);
+  --surface: oklch(0.26 0.02 55);
+  --brand: oklch(0.68 0.15 40);
+  --brand-foreground: oklch(0.15 0.02 55);
+  --brand-soft: oklch(0.35 0.05 40);
+  --positive: oklch(0.72 0.12 155);
+
+  --background: var(--paper);
+  --foreground: oklch(0.96 0.005 60);
+  --card: oklch(0.24 0.02 55);
+  --card-foreground: oklch(0.96 0.005 60);
+  --popover: oklch(0.24 0.02 55);
+  --popover-foreground: oklch(0.96 0.005 60);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface);
+  --secondary-foreground: oklch(0.96 0.005 60);
+  --muted: var(--surface);
+  --muted-foreground: oklch(0.72 0.015 55);
+  --accent: var(--brand-soft);
+  --accent-foreground: oklch(0.96 0.005 60);
+  --destructive: oklch(0.68 0.2 27);
+  --destructive-foreground: oklch(0.985 0.005 60);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: var(--brand);
+  --chart-1: oklch(0.68 0.15 40);
+  --chart-2: oklch(0.72 0.12 155);
+  --chart-3: oklch(0.78 0.14 85);
+  --chart-4: oklch(0.65 0.12 250);
+  --chart-5: oklch(0.7 0.15 320);
+  --sidebar: oklch(0.24 0.02 55);
+  --sidebar-foreground: oklch(0.96 0.005 60);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: oklch(0.96 0.005 60);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--brand);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
