@@ -123,13 +123,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </button>
                   ))}
                   <div className="my-1 border-t border-border" />
-                  <Link
-                    to="/onboarding"
-                    onClick={() => setGroupOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGroupOpen(false);
+                      navigate({ to: "/onboarding" });
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-muted-foreground hover:bg-surface"
                   >
                     + Create new group
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>

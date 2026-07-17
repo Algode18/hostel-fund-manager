@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus, TrendingUp, Users, Wallet, ArrowUpRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import {
@@ -24,6 +24,7 @@ function DashboardPage() {
   const group = useCurrentGroup();
   const me = useCurrentMember();
   const { deposits, expenses, groups, loading } = useStore();
+  const navigate = useNavigate();
 
   // Still fetching the user's groups — show nothing (avoids a flash of the
   // empty state) rather than redirecting anywhere.
@@ -43,12 +44,13 @@ function DashboardPage() {
             You're not part of a group yet. Start a new jar whenever you're ready — it's totally up
             to you.
           </p>
-          <Link
-            to="/onboarding"
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/onboarding" })}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-medium text-brand-foreground shadow-sm transition-transform hover:bg-brand/90 active:scale-[0.98]"
           >
             <Plus className="size-4" /> Start a new jar
-          </Link>
+          </button>
         </div>
       </AppShell>
     );
