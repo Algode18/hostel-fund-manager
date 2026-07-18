@@ -97,14 +97,14 @@ function NewExpensePage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl">
-        <h1 className="font-display text-4xl">New receipt</h1>
+        <h1 className="font-display text-3xl sm:text-4xl">New receipt</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Log a shared expense — split it equally, or type each person's exact share.
         </p>
 
         <form
           onSubmit={submit}
-          className="mt-8 space-y-6 rounded-3xl bg-card p-8 ring-1 ring-black/5"
+          className="mt-6 space-y-6 rounded-2xl bg-card p-5 ring-1 ring-black/5 sm:mt-8 sm:rounded-3xl sm:p-8"
         >
           <Field label="Description">
             <input
@@ -167,7 +167,7 @@ function NewExpensePage() {
           </Field>
 
           <Field label="Split type">
-            <div className="inline-flex rounded-xl bg-surface p-1 ring-1 ring-black/5">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface p-1 ring-1 ring-black/5 sm:inline-flex sm:w-auto">
               <button
                 type="button"
                 onClick={() => setSplitType("equal")}
@@ -249,7 +249,7 @@ function NewExpensePage() {
             </Field>
           )}
 
-          <div className="flex justify-end gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:justify-end">
             <button
               type="button"
               onClick={() => navigate({ to: "/expenses" })}
