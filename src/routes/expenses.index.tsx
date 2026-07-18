@@ -66,12 +66,14 @@ function ExpensesPage() {
             Every receipt, split fairly. {rows.length} shown.
           </p>
         </div>
-        <Link
-          to="/expenses/new"
-          className="inline-flex items-center gap-2 self-start rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand/90"
-        >
-          <Plus className="size-4" /> Add expense
-        </Link>
+        {me.role === "admin" && (
+          <Link
+            to="/expenses/new"
+            className="inline-flex items-center gap-2 self-start rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground shadow-sm hover:bg-brand/90"
+          >
+            <Plus className="size-4" /> Add expense
+          </Link>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col gap-3 rounded-2xl bg-surface p-3 ring-1 ring-black/5 sm:flex-row">
