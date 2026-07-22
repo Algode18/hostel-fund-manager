@@ -2,7 +2,13 @@
 
 A shared expense and deposit tracker for roommates, hostels, or any group pooling money together. Members deposit into a shared jar, log expenses against it, and everyone sees live, always-honest per-person balances.
 
-> Built with TanStack Start (React) + Supabase, deployed on Netlify / Cloudflare Workers.
+> Built with TanStack Start (React) + Supabase, deployed on Vercel.
+
+---
+
+## 🔗 Live Demo
+
+**[https://expense-splitter-delta-nine.vercel.app/](https://expense-splitter-delta-nine.vercel.app/)**
 
 ---
 
@@ -32,7 +38,7 @@ A shared expense and deposit tracker for roommates, hostels, or any group poolin
 | State | React Context (`StoreProvider`) + TanStack Query |
 | Toasts | Sonner |
 | Build tool | Vite 8 |
-| Deployment | Netlify (primary) / Cloudflare Workers via Wrangler |
+| Deployment | Vercel |
 | Language | TypeScript |
 
 ---
@@ -169,14 +175,15 @@ npm run preview   # preview the production build locally
 
 ## ☁️ Deployment
 
-The app is currently deployed via **Netlify** (with a `.netlify/v1/functions/server.mjs` SSR function), and has also been deployed to **Cloudflare Workers** via **Wrangler** in earlier iterations.
+The app is deployed via **Vercel**, connected directly to this GitHub repo — every push to `main` triggers an automatic production deployment.
 
-**Netlify:**
-1. Connect the GitHub repo in the Netlify dashboard.
-2. Set the build command to `npm run build` and publish directory per TanStack Start's Netlify adapter output.
-3. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in Netlify's site settings (Site configuration → Environment variables).
+**Vercel:**
+1. Import the GitHub repo in the Vercel dashboard (New Project → Import Git Repository).
+2. Vercel auto-detects the TanStack Start preset and build settings.
+3. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in Settings → Environment Variables.
+4. Every push to `main` auto-deploys to production; pull requests get their own preview deployments.
 
-**Cloudflare Workers (alternative):**
+**Cloudflare Workers (alternative, used in an earlier iteration):**
 1. Configure `wrangler.json`/`wrangler.toml` with your Worker name and account details.
 2. `npx wrangler deploy`
 3. Set the same `VITE_*` env vars as Worker secrets/variables before building.
@@ -210,21 +217,21 @@ No license specified yet — add one (e.g. MIT) if this project will be shared o
 ## 📝 Project Summary
 
 **One-line summary:**
-> Full-stack web app for group expense tracking and shared fund management, built with React, TanStack Start, and Supabase; deployed on Netlify with role-based access control.
+> Full-stack web app for group expense tracking and shared fund management, built with React, TanStack Start, and Supabase; deployed on Vercel with role-based access control.
 
 **Short description:**
 Built a full-stack expense-splitting application that lets groups (roommates, hostels, teams) pool money into a shared jar, log deposits and expenses, and track live per-person balances. Implemented secure multi-tenant data access with PostgreSQL Row Level Security, role-based permissions (admin/member), and real-time balance calculations across group members.
 
 **Highlights:**
 
-- Designed and built a full-stack expense-management web app using **React 19, TanStack Start/Router, and TypeScript**, with **Supabase (PostgreSQL)** as the backend, deployed on **Netlify** and **Cloudflare Workers**.
+- Designed and built a full-stack expense-management web app using **React 19, TanStack Start/Router, and TypeScript**, with **Supabase (PostgreSQL)** as the backend, deployed on **Vercel**.
 - Architected a **multi-tenant database schema** with **Row Level Security (RLS) policies** and atomic **PostgreSQL RPC functions** (transactional group creation, expense creation with participant splits, jar balance clearing) to enforce data isolation and admin-only permissions at the database level, not just the UI.
 - Implemented **role-based access control** where group creators are auto-assigned admin privileges, and built a member-invite flow that lets admins pre-add members by email who skip onboarding on signup.
 - Built **equal and manual expense-splitting logic**, letting users divide a bill evenly or assign custom amounts per participant, with balances recalculated live as `balance = deposits − share of expenses`.
 - Developed admin-only group management tools (clear jar balance, permanently delete group) with confirmation safeguards to prevent accidental destructive actions.
 - Built a **reporting dashboard** using Recharts to visualize spending trends over time and per-member expense totals.
 - Localized currency formatting (INR) and used **Tailwind CSS v4 + shadcn/ui (Radix primitives)** for a consistent, accessible design system across 9+ routes.
-- Managed the full deployment pipeline — environment variable configuration, Netlify SSR functions, and Cloudflare Workers deployment via Wrangler.
+- Managed the full deployment pipeline — environment variable configuration and CI/CD via Vercel's Git integration.
 
 **Tech stack:**
-`React · TypeScript · TanStack Start/Router · Supabase · PostgreSQL · Row Level Security · Tailwind CSS · shadcn/ui · Recharts · Netlify · Cloudflare Workers`
+`React · TypeScript · TanStack Start/Router · Supabase · PostgreSQL · Row Level Security · Tailwind CSS · shadcn/ui · Recharts · Vercel`
