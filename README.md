@@ -207,7 +207,7 @@ No license specified yet — add one (e.g. MIT) if this project will be shared o
 
 ---
 
-## 📝 Project Summary (Resume / Portfolio)
+## 📝 Project Summary
 
 **One-line summary:**
 > Full-stack web app for group expense tracking and shared fund management, built with React, TanStack Start, and Supabase; deployed on Netlify with role-based access control.
