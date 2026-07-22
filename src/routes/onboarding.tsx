@@ -9,7 +9,7 @@ import { apiErrorMessage } from "@/lib/api";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Create a group — Hostel Fund Manager" },
+      { title: "Create a group — Expense Splitter" },
       { name: "description", content: "Set up your hostel fund and invite your roommates." },
     ],
   }),

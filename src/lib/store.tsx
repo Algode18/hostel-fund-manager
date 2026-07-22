@@ -7,7 +7,7 @@ import type { Deposit, Expense, Group, Member } from "@/lib/api";
 export type { Group, Member, Deposit, Expense, Role } from "@/lib/api";
 export { computeBalances, formatINR, formatDate } from "@/lib/api";
 
-const CURRENT_GROUP_KEY = "hostel-fund-current-group";
+const CURRENT_GROUP_KEY = "expense-splitter-current-group";
 
 interface Store {
   groups: Group[];

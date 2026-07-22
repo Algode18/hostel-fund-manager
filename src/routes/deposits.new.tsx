@@ -9,7 +9,7 @@ import { ShieldAlert } from "lucide-react";
 export const Route = createFileRoute("/deposits/new")({
   head: () => ({
     meta: [
-      { title: "Add deposit — Hostel Fund Manager" },
+      { title: "Add deposit — Expense Splitter" },
       { name: "description", content: "Admin-only: log a cash deposit into the fund." },
     ],
   }),

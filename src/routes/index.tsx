@@ -7,7 +7,7 @@ import { authErrorMessage, useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sign in — Hostel Fund Manager" },
+      { title: "Sign in — Expense Splitter" },
       { name: "description", content: "Sign in to your hostel fund." },
     ],
   }),
@@ -83,9 +83,9 @@ function LoginPage() {
             <div className="size-6 rounded-full border-[3px] border-current" />
           </div>
           <div>
-            <h1 className="font-display text-4xl text-foreground">Hostel Fund Manager</h1>
+            <h1 className="font-display text-4xl text-foreground">Expense Splitter</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              The shared jar for your hostel — deposits in, expenses out, balances always honest.
+              The shared jar for your group — deposits in, expenses out, balances always honest.
             </p>
           </div>
         </div>

@@ -11,7 +11,7 @@ import { LogOut, AlertTriangle, RotateCcw, Trash2 } from "lucide-react";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Hostel Fund Manager" },
+      { title: "Profile — Expense Splitter" },
       { name: "description", content: "Your profile and settings." },
     ],
   }),

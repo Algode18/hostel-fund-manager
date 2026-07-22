@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hostel Fund Manager — shared expense tracker for roommates" },
+      { title: "Expense Splitter — shared expense tracker for roommates" },
       {
         name: "description",
         content:
           "Pool money, log shared expenses, and see live per-person balances for your hostel or apartment.",
       },
-      { property: "og:title", content: "Hostel Fund Manager" },
+      { property: "og:title", content: "Expense Splitter" },
       {
         property: "og:description",
         content: "Pool money, log shared expenses, and see live per-person balances.",

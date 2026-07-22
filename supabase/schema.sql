@@ -1,5 +1,5 @@
 -- ============================================================================
--- Hostel Fund Manager — Supabase schema
+-- Expense Splitter — Supabase schema
 -- Run this once in Supabase Studio → SQL Editor (or via `supabase db push`).
 -- Safe to re-run: uses IF NOT EXISTS / OR REPLACE / DROP ... IF EXISTS.
 -- ============================================================================

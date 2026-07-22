@@ -18,7 +18,7 @@ import {
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "Reports — Hostel Fund Manager" },
+      { title: "Reports — Expense Splitter" },
       { name: "description", content: "Spending trends and per-member totals." },
     ],
   }),

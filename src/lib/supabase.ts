@@ -22,6 +22,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: "hostel-fund-auth",
+    storageKey: "expense-splitter-auth",
   },
 });

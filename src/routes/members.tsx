@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { UserPlus, Trash2 } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
+import { UserPlus, Trash2, ChevronDown, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import {
   computeBalances,
+  formatDate,
   formatINR,
   useCurrentGroup,
   useCurrentMember,
@@ -15,7 +16,7 @@ import { apiErrorMessage } from "@/lib/api";
 export const Route = createFileRoute("/members")({
   head: () => ({
     meta: [
-      { title: "Members — Hostel Fund Manager" },
+      { title: "Members — Expense Splitter" },
       { name: "description", content: "The roommates in your fund." },
     ],
   }),
@@ -32,8 +33,34 @@ function MembersPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const canManage = me.role === "admin";
+
+  // Only the signed-in member's own contribution breakdown — every expense
+  // they were split into, and exactly what their share of it was. Other
+  // members' rows never compute or expose this, so nobody can see anyone
+  // else's split-by-split detail, only their own.
+  const myExpenseRows = useMemo(() => {
+    return store.expenses
+      .filter((e) => e.groupId === group.id)
+      .flatMap((e) => {
+        const share = e.shares.find((s) => s.memberId === me.id);
+        if (!share) return [];
+        const payer = group.members.find((m) => m.id === e.paidBy);
+        return [
+          {
+            id: e.id,
+            title: e.title,
+            createdAt: e.createdAt,
+            share: share.amount,
+            paidByName: payer?.name ?? "—",
+            paidBySelf: e.paidBy === me.id,
+          },
+        ];
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [store.expenses, group.id, group.members, me.id]);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,10 +188,25 @@ function MembersPage() {
                   </p>
                   <p className="mt-1 text-sm font-medium">{formatINR(b.deposited)}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Spent
-                  </p>
+                <div className={m.id === me.id ? "cursor-pointer select-none" : ""}>
+                  <button
+                    type="button"
+                    disabled={m.id !== me.id}
+                    onClick={() => m.id === me.id && setExpanded((v) => !v)}
+                    className="flex items-center gap-1 text-left disabled:cursor-default"
+                  >
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Spent
+                    </p>
+                    {m.id === me.id && (
+                      <ChevronDown
+                        className={
+                          "size-3 text-muted-foreground transition-transform " +
+                          (expanded ? "rotate-180" : "")
+                        }
+                      />
+                    )}
+                  </button>
                   <p className="mt-1 text-sm font-medium">{formatINR(b.spent)}</p>
                 </div>
                 <div>
@@ -177,6 +219,38 @@ function MembersPage() {
                   </p>
                 </div>
               </div>
+
+              {m.id === me.id && expanded && (
+                <div className="mt-3 -mx-4 -mb-4 rounded-b-2xl border-t border-border bg-surface/50 px-4 pb-4 pt-3">
+                  <div className="mb-2.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    <Receipt className="size-3" />
+                    Your split-by-split contributions
+                  </div>
+                  {myExpenseRows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No expenses split with you yet.</p>
+                  ) : (
+                    <ul className="divide-y divide-border/70 overflow-hidden rounded-xl bg-card ring-1 ring-black/5">
+                      {myExpenseRows.map((row) => (
+                        <li
+                          key={row.id}
+                          className="flex items-center justify-between gap-3 px-3 py-2.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium leading-tight">{row.title}</p>
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                              {formatDate(row.createdAt)} · paid by{" "}
+                              {row.paidBySelf ? "you" : row.paidByName}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm font-semibold text-foreground">
+                            {formatINR(row.share)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -198,55 +272,114 @@ function MembersPage() {
           <tbody className="divide-y divide-stone-950/5">
             {group.members.map((m) => {
               const b = balances[m.id] ?? { deposited: 0, spent: 0, balance: 0 };
+              const isMe = m.id === me.id;
+              const showPanel = isMe && expanded;
               return (
-                <tr key={m.id} className="hover:bg-surface/50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-full ring-1 ring-black/5"
-                        style={{ backgroundColor: `hsl(${m.avatarHue} 45% 82%)` }}
-                      />
-                      <div>
-                        <p className="font-medium">{m.name}</p>
-                        <p className="text-xs text-muted-foreground">{m.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider " +
-                        (m.role === "admin"
-                          ? "bg-brand/10 text-brand"
-                          : "bg-surface text-muted-foreground")
-                      }
-                    >
-                      {m.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatINR(b.deposited)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatINR(b.spent)}</td>
-                  <td className="px-4 py-3 text-right font-semibold">
-                    <span className={b.balance >= 0 ? "text-positive" : "text-brand"}>
-                      {b.balance >= 0 ? "+" : ""}
-                      {formatINR(b.balance)}
-                    </span>
-                  </td>
-                  {canManage && (
+                <Fragment key={m.id}>
+                  <tr
+                    className={
+                      "hover:bg-surface/50 " + (showPanel ? "bg-surface/50" : "")
+                    }
+                  >
                     <td className="px-4 py-3">
-                      {m.role !== "admin" && (
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="size-8 shrink-0 rounded-full ring-1 ring-black/5"
+                          style={{ backgroundColor: `hsl(${m.avatarHue} 45% 82%)` }}
+                        />
+                        <div>
+                          <p className="font-medium">{m.name}</p>
+                          <p className="text-xs text-muted-foreground">{m.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider " +
+                          (m.role === "admin"
+                            ? "bg-brand/10 text-brand"
+                            : "bg-surface text-muted-foreground")
+                        }
+                      >
+                        {m.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatINR(b.deposited)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {isMe ? (
                         <button
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-brand/10 hover:text-brand disabled:opacity-50"
-                          onClick={() => remove(m.id, m.name)}
-                          disabled={removingId === m.id}
-                          title="Remove"
+                          type="button"
+                          onClick={() => setExpanded((v) => !v)}
+                          className="inline-flex items-center gap-1 rounded-md hover:text-foreground"
+                          title="Show your split-by-split contributions"
                         >
-                          <Trash2 className="size-3.5" />
+                          {formatINR(b.spent)}
+                          <ChevronDown
+                            className={
+                              "size-3 transition-transform " + (expanded ? "rotate-180" : "")
+                            }
+                          />
                         </button>
+                      ) : (
+                        formatINR(b.spent)
                       )}
                     </td>
+                    <td className="px-4 py-3 text-right font-semibold">
+                      <span className={b.balance >= 0 ? "text-positive" : "text-brand"}>
+                        {b.balance >= 0 ? "+" : ""}
+                        {formatINR(b.balance)}
+                      </span>
+                    </td>
+                    {canManage && (
+                      <td className="px-4 py-3">
+                        {m.role !== "admin" && (
+                          <button
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-brand/10 hover:text-brand disabled:opacity-50"
+                            onClick={() => remove(m.id, m.name)}
+                            disabled={removingId === m.id}
+                            title="Remove"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                  {showPanel && (
+                    <tr className="bg-surface/50">
+                      <td colSpan={canManage ? 6 : 5} className="px-4 pb-4 pt-0">
+                        <div className="ml-11 rounded-xl bg-card ring-1 ring-black/5">
+                          <div className="flex items-center gap-1.5 border-b border-border/70 px-3 py-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                            <Receipt className="size-3" />
+                            Your split-by-split contributions
+                          </div>
+                          {myExpenseRows.length === 0 ? (
+                            <p className="px-3 py-2.5 text-sm text-muted-foreground">
+                              No expenses split with you yet.
+                            </p>
+                          ) : (
+                            <ul className="divide-y divide-border/70">
+                              {myExpenseRows.map((row) => (
+                                <li
+                                  key={row.id}
+                                  className="flex items-center justify-between gap-3 px-3 py-2"
+                                >
+                                  <span className="text-foreground">{row.title}</span>
+                                  <span className="text-muted-foreground">
+                                    {formatDate(row.createdAt)} · paid by{" "}
+                                    {row.paidBySelf ? "you" : row.paidByName}
+                                  </span>
+                                  <span className="font-medium">{formatINR(row.share)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   )}
-                </tr>
+                </Fragment>
               );
             })}
           </tbody>

@@ -13,7 +13,7 @@ import {
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Hostel Fund Manager" },
+      { title: "Dashboard — Expense Splitter" },
       { name: "description", content: "Your balance, deposits, and shared expenses at a glance." },
     ],
   }),

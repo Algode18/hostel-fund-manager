@@ -9,7 +9,7 @@ import { apiErrorMessage } from "@/lib/api";
 export const Route = createFileRoute("/expenses/")({
   head: () => ({
     meta: [
-      { title: "Expenses — Hostel Fund Manager" },
+      { title: "Expenses — Expense Splitter" },
       { name: "description", content: "All shared expenses with filters." },
     ],
   }),
